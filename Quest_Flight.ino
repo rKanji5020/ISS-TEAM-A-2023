@@ -56,13 +56,13 @@ void Flying() {
   //   Here to set up flight conditions i/o pins, atod, and other special condition
   //   of your program
   //
-  pinmode(pin1, OUTPUT);  //nutrient pump
-  pinmode(pin2, OUTPUT);  //antibiotic pump
+  pinMode(pin1, OUTPUT);  //nutrient pump
+  pinMode(pin2, OUTPUT);  //antibiotic pump
   //camera leds
-  pinmode(pin3, OUTPUT); // LED 1
-  pinmode(pin4, OUTPUT); // LED 2
-  pinmode(pin5, OUTPUT); // LED 3
-  pinmode(pin6, OUTPUT); // LED 4
+  pinMode(pin3, OUTPUT); // LED 1
+  pinMode(pin4, OUTPUT); // LED 2
+  pinMode(pin5, OUTPUT); // LED 3
+  pinMode(pin6, OUTPUT); // LED 4
   //
   //******************************************************************
   // all / most delays are subject to change
@@ -175,7 +175,7 @@ void Flying() {
       String(green, DEC);
       String(blue, DEC);
 
-      logit_MyFile(red, green, blue, "sensorReadings");
+      logit_myFile(red, green, blue, "sensorReadings");
       
       
       //
@@ -243,7 +243,7 @@ void logit_myFile(String  r, String  g, String  b, String myFile) {
   fileNum++; //adds num to end of file
   itoa(fileNum, txtBuffer, 10);
   Logfile = SD.open(strcat(strcat(myFile, txtBuffer), ".txt"), FILE_WRITE);  //open new myFile;
-  txtBuffer[0] = '/0'; 
+  txtBuffer[0] = "/0"; 
   if (Logfile) {  
   //with logfile is open
     Logfile.write(xd); Logfile.write(" Days   ");
@@ -254,7 +254,7 @@ void logit_myFile(String  r, String  g, String  b, String myFile) {
     Logfile.write(strcat("green: ", g)); 
     Logfile.write(strcat("blue: ", b)); 
   } else {                                        //if not open say error
-    Serial.println("\r\nlogit error")  
+    Serial.println("\r\nlogit error");  
   }  
   Logfile.close();    
 }
