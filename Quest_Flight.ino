@@ -30,7 +30,7 @@
 //   Beginning of the flight program setup
 //
 int fileNum = 0;
-char txtBuffer[20];
+char txtBuffer[20] = "----------";
 SFE_ISL29125 RGB_sensor;
 void Flying() {
     // Initialize the ISL29125 and verify its presence
@@ -171,11 +171,11 @@ void Flying() {
       unsigned int green = RGB_sensor.readGreen();
       unsigned int blue = RGB_sensor.readBlue();      
 
-      String(red, DEC);
-      String(green, DEC);
-      String(blue, DEC);
+//      char redS[64] = String(red, DEC);
+//      String(green, DEC);
+//      String(blue, DEC);
 
-      logit_myFile(red, green, blue, "sensorReadings");
+      logit_myFile(red, green, blue, ("sensorReadings"));
       
       
       //
@@ -239,20 +239,21 @@ void Flying() {
   }
 }
 
-void logit_myFile(String  r, String  g, String  b, String myFile) {
+void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
   fileNum++; //adds num to end of file
   itoa(fileNum, txtBuffer, 10);
-  Logfile = SD.open(strcat(strcat(myFile, txtBuffer), ".txt"), FILE_WRITE);  //open new myFile;
-  txtBuffer[0] = "/0"; 
+  Logfile = SD.open(strcat(strcat(myFile, txtBuffer) , (".txt")), FILE_WRITE);  //open new myFile;
+  txtBuffer[0] = '\0'; 
   if (Logfile) {  
   //with logfile is open
     Logfile.write(xd); Logfile.write(" Days   ");
     Logfile.write(xh); Logfile.write(" Hours  ");
     Logfile.write(xm); Logfile.write(" Min  ");
     Logfile.write(xs); Logfile.write(" Sec");
-    Logfile.write(strcat("red: ", r));                         //write the string to file
-    Logfile.write(strcat("green: ", g)); 
-    Logfile.write(strcat("blue: ", b)); 
+    char red[] = "red";
+    Logfile.write(red + r);                         //write the string to file
+    Logfile.write("green: " + g); 
+    Logfile.write("blue: " + b); 
   } else {                                        //if not open say error
     Serial.println("\r\nlogit error");  
   }  
