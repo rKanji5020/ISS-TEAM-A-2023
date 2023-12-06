@@ -146,16 +146,16 @@ void Flying() {
       //
       //  Take a photo using the serial c329 camera and place file name in Queue
       //
-      digitalWrite(11, HIGH); // Blue LED on
-      digitalWrite(10, HIGH); // WHITE 1 on
-      digitalWrite(9, HIGH); // WHITE 2 on      
+      digitalWrite(11, LOW); // Blue LED on
+      digitalWrite(10, LOW); // WHITE 1 on
+      digitalWrite(9, LOW); // WHITE 2 on      
 
       cmd_takeSphoto();                          //Take photo and send it
       delay(100);
 
-      digitalWrite(11, LOW); // Blue LED on
-      digitalWrite(10, LOW); // WHITE 1 on
-      digitalWrite(9, LOW); // WHITE 2 on      
+      digitalWrite(11, HIGH); // Blue LED off
+      digitalWrite(10, HIGH); // WHITE 1 off
+      digitalWrite(9, HIGH); // WHITE 2 off    
 
       delay(1000);
 
@@ -193,19 +193,19 @@ void Flying() {
     }
 
     //continue
-    if ((millis() - event2timer) > eventTime2) { //color sensor event
-      event2timer = millis();                    //reset event2timer
-      Serial.println();
-      Serial.println(millis());
-      unsigned int red = RGB_sensor.readRed();
-      unsigned int green = RGB_sensor.readGreen();
-      unsigned int blue = RGB_sensor.readBlue();      
+    //if ((millis() - event2timer) > eventTime2) { //color sensor event OLD
+    //  event2timer = millis();                    //reset event2timer
+    //Serial.println();
+    //Serial.println(millis());
+    //unsigned int red = RGB_sensor.readRed();
+    //unsigned int green = RGB_sensor.readGreen();
+    //unsigned int blue = RGB_sensor.readBlue();      
 
 //      char redS[64] = String(red, DEC);
 //      String(green, DEC);
 //      String(blue, DEC);
 
-      logit_myFile(red, green, blue, ("sensorReadings"));
+     // logit_myFile(red, green, blue, ("sensorReadings"));
       
       
       //
@@ -243,9 +243,9 @@ void Flying() {
       writelongfram((cumunix + framdeltaunix), CumUnix);  //add and Save cumulative unix time Mission
       writelongfram(currentunix, PreviousUnix);           //reset PreviousUnix to current for next time
       //
-      Serial.print("--- Fram Mission Clock = ");      //testing print mission clock
+      Serial.print(": Mission Clock = ");      //testing print mission clock
       Serial.print(readlongFromfram(CumUnix));        //mission clock
-      Serial.print("  =>   ");                        //spacer
+      Serial.print(" is ");                        //spacer
       //
       //------Output the terminal  days hours min sec
       //
@@ -266,8 +266,116 @@ void Flying() {
       }
       DotStarOff();
     }
-  }
+//**********************************************************************
+//*********** Read Sensor1 Event read and add to text buffer************
+//**********************************************************************
+    //
+    if ((millis() - Sensor1Timer) > Sensor1time) {    //Is it time to read?
+      Sensor1Timer = millis();                        //Yes, lets read the sensor1
+      sensor1count++;
+      unsigned int red = RGB_sensor.readRed();
+      unsigned int green = RGB_sensor.readGreen();
+      unsigned int blue = RGB_sensor.readBlue();      
+      int value1 = sensor1count;              //sensor count number up from zero
+
+      //
+      add2text(value1, red, green, blue);       //add the values to the text buffer
+      //    
+    }     // End of Sensor1 time event
+    //
+
+//FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+//    This is a function to adds three values to the user_text_buffer
+//    Written specificy for 2023-2024 Team F, Team B,
+//    Enter the function with "add2text(1st interger value, 2nd intergre value, 3rd intergervalue);
+//    the " - value1 " text can be changed to lable the value or removed to same space
+//    ", value2 " and ", value 3 " masy also be removed or changed to a lable.
+//    Space availiable is 1024 bytes, Note- - each Data line has a ncarrage return and a line feed
+//
+//example of calling routine:
+//       //
+//      int value1 = 55;
+//      int value2 = 55000;
+//      int value3 = 14;
+//      add2text(value1, value2, value3);
+//      //
+//EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE     
+//
 }
+void add2text(int value1,unsigned int value2,unsigned int value3,unsigned int value4){ //Add value to text file
+        if (strlen(user_text_buf0) >= (sizeof(user_text_buf0)-100)){    //Check for full
+          Serial.println("text buffer full");                           //yes, say so
+          return;                                                       //back to calling
+        }
+        char temp[11];                  // Maximum number of digits for a 32-bit integer 
+        int index = 10;                 //Start from the end of the temperary buffer  
+        char str[12];                   //digits + null terminator   
+//--------- get time and convert to str for entry into text buffer ----
+        DateTime now = rtc.now();                   //get time of entry
+        uint32_t value = now.unixtime();            //get unix time from entry
+        do {
+            temp[index--] = '0' + (value % 10);     // Convert the least significant digit to ASCII
+            value /= 10;                            // Move to the next digit
+        } while (value != 0);
+        strcpy(str, temp + index +1);               // Copy the result to the output string
+//---------- end of time conversion uni time is now in str -------------       
+        strcat(user_text_buf0, (str));              //write unix time
+        //
+        // unit time finish entry into this data line
+        //
+        strcat(user_text_buf0, (" - count= "));            // seperator
+        strcat(user_text_buf0, (itoa(value1, ascii, 10)));
+        strcat(user_text_buf0, (", red= "));
+        strcat(user_text_buf0, (itoa(value2, ascii, 10)));
+        strcat(user_text_buf0, (", green= "));
+        strcat(user_text_buf0, (itoa(value3,  ascii, 10)));
+        strcat(user_text_buf0, (", blue= "));
+        strcat(user_text_buf0, (itoa(value4,  ascii, 10)));
+        strcat(user_text_buf0, ("\r\n"));
+
+        //Serial.println(strlen(user_text_buf0));  //for testing
+ }
+ //------end of Function to add to user text buffer ------       
+//
+//=============================================================================
+//
+////FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+//  Function to write into a 30K databuffer
+//    char databuffer[30000];         // Create a character buffer with a size of 2KB
+//    int databufferLength = 0;       // Initialize the buffer length
+//  Append data to the large data buffer buffer always enter unit time of data added
+//  enter: void dataappend(int counts, int ampli, int SiPM, int Deadtime) (4 values)
+//
+
+
+void dataappend(int counts,int ampli,int SiPM,int Deadtime) {          //entry, add line with values to databuffer
+  //----- get and set time to entry -----
+  DateTime now = rtc.now();                                               //get time of entry
+  String stringValue = String(now.unixtime());                            //convert unix time to string
+  const char* charValue = stringValue.c_str();                            //convert to a C string value
+  appendToBuffer(charValue);                                              //Sent unix time to databuffer
+  //----- add formated string to buffer -----
+  String results = " - " + String(counts) + " " + String(ampli) + " " + String(SiPM) + " " + String (Deadtime) + "\r\n";  //format databuffer entry
+  const char* charValue1 = results.c_str();                               //convert to a C string value
+  appendToBuffer(charValue1);                                             //Send formated string to databuff
+  //
+  //  Serial.println(databufferLength);                                   //print buffer length for testing only
+}
+
+//-----------------------                                               //end dataappend
+//----- sub part od dataappend -- append to Buffer -----
+//-----------------------
+void  appendToBuffer(const char* data) {                                   //enter with charator string to append
+  int dataLength = strlen(data);                                          //define the length of data to append
+      // ----- Check if there is enough space in the buffer                           //enough space?
+  if (databufferLength + dataLength < sizeof(databuffer)) {               //enouth space left in buffer
+      // ----- Append the data to the buffer
+    strcat(databuffer, data);                                             //yes enough space, add data to end of buffer
+    databufferLength += dataLength;                                       //change to length of the buffer
+  } else {
+    Serial.println("Buffer is full. Data not appended.");                 //Not enough space, say so on terminal
+  }       //end not enough space
+}         //end appendToBuffer
 
 void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
   fileNum++; //adds num to end of file
