@@ -24,15 +24,11 @@ void tcaselect(uint8_t i) {
 
 // standard Arduino setup()
 void setup()
-{
-
-
-  
+{ 
     while (!Serial);
     delay(1000);
 
     Wire.begin();
-    
     Serial.begin(115200);
     Serial.println("\nTCAScanner new ready!");
 
@@ -42,6 +38,11 @@ void setup()
     if (RGB_sensor1.init())
     {
       Serial.println("Sensor Initialization Successful\n\r");
+      Serial.print("Red: "); Serial.println(red,HEX);
+      Serial.print("Green: "); Serial.println(green,HEX);
+      Serial.print("Blue: "); Serial.println(blue,HEX);
+      Serial.println();
+      delay(2000);      
     } else {
       Serial.println("Sensor Initialization Failed\n\r");           
     }
