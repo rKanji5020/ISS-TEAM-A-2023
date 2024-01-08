@@ -34,15 +34,19 @@
 #define one_day  24*one_hour                   // one hour of time
 //
 
-#define TimeEvent1_time     ((one_min * 60) / SpeedFactor)      //take a photo time
-#define Sensor1time         ((one_min * 15) / SpeedFactor)      //Time to make Sensor1 readings 
-#define Sensor2time         ((one_sec * 20)  / SpeedFactor) 
+#define TimeEvent1_time     ((one_min * 60) / SpeedFactor)      //take a photo time TBD
+#define Sensor1time         ((one_min * 2)/ SpeedFactor)      //Time to make Sensor1 readings -- both color sensor readings 
 //
 
-#define eventTime0  one_day                 //this event every day - photo, pump broth
-#define eventTime1  one_day*10              //this event every 10 days - pump antibiotic
-#define eventTime2  one_min*3              //this event every 3 mins - read sensor
+#define eventTime0  one_day                 //this event every day - photo, pump broth TBD
+#define eventTime1  one_day*10              //this event every 10 days - pump antibiotic TBD 
+#define eventTime2  one_min*2              //this event every 2 mins - read sensor TBD
 
+//
+  int sensor1count = 0;     //counter of times the sensor has been accessed
+  int sensor2count = 0;     //counter of times the sensor has been accessed
+  int State =   0;          //FOR TESTING ONLY WILL SWITCH FROM SPI CAMERA TO SERIAL CAMERA EVERY TimeEvent1_time!!!!!
+//
 
 ///////////////////////////////////////////////////////////////////////////
 /**
@@ -58,15 +62,7 @@ char txtBuffer[20] = "----------";
 
 // color sensor declaration
 SFE_ISL29125 RGB_sensor;
-
 void Flying() {
-    // Initialize the ISL29125 and verify its presence
-  if (RGB_sensor.init())
-  {
-    Serial.println("Sensor Initialization Successful\n\r");
-  } else {
-    Serial.println("Sensor Initialization Unsuccessful?");
-  }
 
   Serial.println("Here to Run flight program, not done yet 20230718");
   Serial.println(" 20230718 working on it");
@@ -89,6 +85,9 @@ void Flying() {
   //   Here to set up flight conditions i/o pins, atod, and other special condition
   //   of your program
   //
+  //
+  //
+  //******************************************************************
 
   //refer to component test
   pinMode(3, OUTPUT);  //nutrient pump (DO1)
@@ -118,9 +117,12 @@ void Flying() {
   //***********************************************************************
   //***********************************************************************
   //  All Flight conditions are now set up,  NOW to enter flight operations
+  //***********************************************************************
+  //***********************************************************************
   //
-  //
+
   //delay(1000); 24 hr wait 
+
   while (1) {
     //
     //----------- Test for terminal abort command from flying ----------------------
@@ -131,44 +133,50 @@ void Flying() {
         return  ;                     //return back to poeration sellection
       }                               //end check
     }                                 //end abort check
+//------------------------------------------------------------------
+//
+//*********** Timed Event 1 test ***************************************
+// 
     //-------------------------------------------------------------------
-    //  this test if eventTime0 time has come
-    //  See above for eventTime0 settings between this event
+    //  this test if TimeEvent1 time has come
+    //  See above for TimeEvent1_time settings between this event
     //
-    if ((millis() - event0timer) > eventTime0) {  //camera and broth event 
-      event0timer = millis();                    //yes is time now reset event0timer
-      Serial.println();                          //
-      Serial.println(millis());                  //
-      //
-      //***** Build the User Text buffer here
-      //***** additions to the user text buffer can be added anytime between photo events
+    if ((millis() - TimeEvent1) > TimeEvent1_time) {
+      TimeEvent1 = millis();                    //yes is time now reset TimeEvent1
+          //  Take a photo using the serial c329 camera and place file name in Queue
+      if (State == 0){      //which state ?             
+          ledCondition("on");
+          delay(100);
+          cmd_takeSphoto();            //Take serial photo and send it
+          delay(100);
+          ledCondition("off");          
+      }
+          //  Take a photo using the SPI c329 camera and place file name in Queue
+          //  Hardware Note: to use the Spi camera - a jumper must be connected from IO0
+          //  the the hold pin on J6.......
+      if (State == 1){
+          ledCondition("on");
+          delay(100);
+          cmd_takeSpiphoto();         //Take SPI photo and send it
+          delay(100);
+          ledCondition("off");
 
-      //
-      //  Take a photo using the serial c329 camera and place file name in Queue
-      //
-      digitalWrite(11, LOW); // Blue LED on
-      digitalWrite(10, LOW); // WHITE 1 on
-      digitalWrite(9, LOW); // WHITE 2 on      
-
-      cmd_takeSphoto();                          //Take photo and send it
-      delay(100);
-
-      digitalWrite(11, HIGH); // Blue LED off
-      digitalWrite(10, HIGH); // WHITE 1 off
-      digitalWrite(9, HIGH); // WHITE 2 off    
-
-      delay(1000);
-
-      digitalWrite(3, LOW);                   // pumps nutrient
-      delay(1000);
-      digitalWrite(3, HIGH);                    // turns pump off
-      delay(5000);
-      // Call the freeMemory function and print the result
-      // cmd_stackandheap();                          //enable to know stack and heap after photo time
-      //
-      // logit_string();                            //log the event
-    }                                               //end of eventTime0
-    //----------------------------------------------------------------------
+      }
+          //  no camera - Send a 30k of buffer datta in place of a photo to the output Queue
+      if (State == 2){
+          nophoto30K();               //Use photo buffer for data
+      }
+          //  no camera - send just text appended with data to the output Queue
+      if (State == 3){
+          nophotophoto();               //photo event with no photo just to transfer data
+      }
+      State++;                          //go to the next state
+      if (State == 4){                  //reset the state back to 0
+        State = 0;                      //state to 0
+      }
+    }                                               //end of TimeEvent1_time
+    //------------------------------------------------------------------
+    //
     //  This test if eventTime1 time has come
     //  See above for eventTime1 settings between this event
     //
@@ -217,24 +225,21 @@ void Flying() {
       //
       //  Take a photo using the SPI c329 camera
       //
-      
-
-    }
-    //------------------------------------------------------------------
-    //------------  Here one sec timer  ------ -every second ------
+//*******************************************************************************
+//*********** One second counter timer will trigger every second ****************
+//*******************************************************************************
+    //  Here one sec timer - every second
     //
-    if ((millis() - one_secTimer) > one_sec) {
-      one_secTimer = millis();
-      DotStarYellow();                              //Blink Yellow when flying
-      Serial.write('+');                            //Send to terminal
+    if ((millis() - one_secTimer) > one_sec) {      //one sec counter
+      one_secTimer = millis();                      //reset one second timer
+      DotStarYellow();                              //turn on Yellow DotStar to Blink for running
       //
-      //-------------------------------
-      // DO NOT TOUCH THIS CODE IT IS NECESARY FOR PROPER MISSION CLOCK OPERATIONS
-      //    Mission clock timer
-      //    FRAM keep track of cunlitive power on time
-      //    and RTC with unix seconds
-      //-------------------------------
-      //
+//****************** NO_NO_NO_NO_NO_NO_NO_NO_NO_NO_NO_ *************************
+// DO NOT TOUCH THIS CODE IT IS NECESARY FOR PROPER MISSION CLOCK OPERATIONS
+//    Mission clock timer
+//    FRAM keep track of cunlitive power on time
+//    and RTC with unix seconds
+//------------------------------------------------------------------------------
       DateTime now = rtc.now();                           //get the time time,don't know how long away
       currentunix = (now.unixtime());                     //get current unix time
       Serial.print(currentunix); Serial.print("  ");      //testing print unix clock
@@ -242,6 +247,10 @@ void Flying() {
       uint32_t cumunix = readlongFromfram(CumUnix);       //Get cumulative unix mission clock
       writelongfram((cumunix + framdeltaunix), CumUnix);  //add and Save cumulative unix time Mission
       writelongfram(currentunix, PreviousUnix);           //reset PreviousUnix to current for next time
+//
+//********* END_NO_END_NO_END_NO_END_NO_END_NO_END_NO_ **************************
+      //
+      //  This part prints out every second
       //
       Serial.print(": Mission Clock = ");      //testing print mission clock
       Serial.print(readlongFromfram(CumUnix));        //mission clock
@@ -256,19 +265,12 @@ void Flying() {
       Serial.print(xs); Serial.println(" Sec");
       //
       //
-      //
-      //------------ print time once a min -------------------
-      //
-      if ((millis() - sec60Timer) > (60 * one_sec)) {
-        sec60Timer = millis();
-        Serial.println();
-        cmd_time();
-      }
       DotStarOff();
-    }
+    } // end of one second routine
 //**********************************************************************
 //*********** Read Sensor1 Event read and add to text buffer************
 //**********************************************************************
+    //update based on multiplexer
     //
     if ((millis() - Sensor1Timer) > Sensor1time) {    //Is it time to read?
       Sensor1Timer = millis();                        //Yes, lets read the sensor1
@@ -301,6 +303,7 @@ void Flying() {
 //      //
 //EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE     
 //
+   }
 }
 void add2text(int value1,unsigned int value2,unsigned int value3,unsigned int value4){ //Add value to text file
         if (strlen(user_text_buf0) >= (sizeof(user_text_buf0)-100)){    //Check for full
@@ -334,7 +337,7 @@ void add2text(int value1,unsigned int value2,unsigned int value3,unsigned int va
         strcat(user_text_buf0, ("\r\n"));
 
         //Serial.println(strlen(user_text_buf0));  //for testing
- }
+}
  //------end of Function to add to user text buffer ------       
 //
 //=============================================================================
@@ -365,7 +368,7 @@ void dataappend(int counts,int ampli,int SiPM,int Deadtime) {          //entry, 
 //-----------------------                                               //end dataappend
 //----- sub part od dataappend -- append to Buffer -----
 //-----------------------
-void  appendToBuffer(const char* data) {                                   //enter with charator string to append
+void appendToBuffer(const char* data) {                                   //enter with charator string to append
   int dataLength = strlen(data);                                          //define the length of data to append
       // ----- Check if there is enough space in the buffer                           //enough space?
   if (databufferLength + dataLength < sizeof(databuffer)) {               //enouth space left in buffer
@@ -377,6 +380,19 @@ void  appendToBuffer(const char* data) {                                   //ent
   }       //end not enough space
 }         //end appendToBuffer
 
+//sets main leds to on or off
+void ledCondition(String condition) {
+  if (condition == "on") {
+    digitalWrite(11, LOW); // Blue LED on
+    digitalWrite(10, LOW); // WHITE 1 on
+    digitalWrite(9, LOW); // WHITE 2 on   
+  } else if (condition == "off") {
+    digitalWrite(11, HIGH); // Blue LED on
+    digitalWrite(10, HIGH); // WHITE 1 on
+    digitalWrite(9, HIGH); // WHITE 2 on       
+  }
+}
+// old method to create text file from sensor data 
 void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
   fileNum++; //adds num to end of file
   itoa(fileNum, txtBuffer, 10);
