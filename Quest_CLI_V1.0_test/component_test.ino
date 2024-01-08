@@ -6,7 +6,7 @@
 #define IO3 (9)               // Input/Output to payload plus
 #define IO2 (2)               // Input/Output to payload plus
 #define IO1 (3)               // Input/Output to payload plus
-#define IO0 (A6)              // Input/Output to payload plus 
+#define IO0 (A6)              // Input/Output to payload plus
 
 void setup() {
   // put your setup code here, to run once:
