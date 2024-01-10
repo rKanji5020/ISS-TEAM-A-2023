@@ -23,11 +23,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  digitalWrite(IO1, HIGH); // Nutrient pump off
+  digitalWrite(IO1, HIGH); // half of pump 1
   digitalWrite(IO2, HIGH); //antiboitc pump off
   digitalWrite(IO5, HIGH); // Blue LED off
-  digitalWrite(IO4, HIGH); // WHITE 1 off
-  digitalWrite(IO3, HIGH); // WHITE 2 off
+  digitalWrite(IO4, LOW); // half of pump 2
+  digitalWrite(IO3, LOW); // half of pump 2
 
   // delay(2000);
   // digitalWrite(IO1, LOW);
