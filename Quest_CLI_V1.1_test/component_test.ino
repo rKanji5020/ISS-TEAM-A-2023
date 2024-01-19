@@ -21,13 +21,23 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // pump 1 runs at full power when IO0 high IO1 low 
+  // does not turn off 
+  // connection could be weak
+  // IO2 does not affect pump 1
+  // voltage runs from pump to ground when everything set to high
+  // yellow wire on white led seems to not be connected to anything
+  // white and blue leds both turn off when IO7 is set to high
+  // white leds not affected by IO6
 
+  digitalWrite(IO0, LOW); // half of pump 1
   digitalWrite(IO1, HIGH); // half of pump 1
-  digitalWrite(IO2, HIGH); //antiboitc pump off
-  digitalWrite(IO5, HIGH); // Blue LED off
-  digitalWrite(IO4, LOW); // half of pump 2
+  digitalWrite(IO2, HIGH); // ??
   digitalWrite(IO3, LOW); // half of pump 2
+  digitalWrite(IO4, LOW); // half of pump 2
+  digitalWrite(IO5, HIGH); // ??
+  digitalWrite(IO6, LOW); // white and blue leds
+  digitalWrite(IO7, LOW); // ALSO white and blue leds
 
   // delay(2000);
   // digitalWrite(IO1, LOW);
