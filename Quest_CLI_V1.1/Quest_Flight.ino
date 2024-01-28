@@ -34,17 +34,12 @@
 #define one_day  24*one_hour                   // one hour of time
 //
 
-#define TimeEvent1_time     ((one_min * 60) / SpeedFactor)      //take a photo time TBD
+#define TimeEvent1_time     ((one_min * 60) / SpeedFactor)      //take a photo time and pump broth TBD
+#define TimeEvent2_time     ((one_day * 10) / SpeedFactor)       //this event every 10 days - pump antibiotic TBD 
 #define Sensor1time         ((one_min * 2)/ SpeedFactor)      //Time to make Sensor1 readings -- both color sensor readings 
-//
-
-#define eventTime0  one_day                 //this event every day - photo, pump broth TBD
-#define eventTime1  one_day*10              //this event every 10 days - pump antibiotic TBD 
-#define eventTime2  one_min*2              //this event every 2 mins - read sensor TBD
 
 //
   int sensor1count = 0;     //counter of times the sensor has been accessed
-  int sensor2count = 0;     //counter of times the sensor has been accessed
   int State =   0;          //FOR TESTING ONLY WILL SWITCH FROM SPI CAMERA TO SERIAL CAMERA EVERY TimeEvent1_time!!!!!
 //
 
@@ -67,14 +62,12 @@ void Flying() {
   Serial.println("Here to Run flight program, not done yet 20230718");
   Serial.println(" 20230718 working on it");
 
-  uint32_t event0timer = millis();              //set event zero timer
-  uint32_t event1timer = millis();              //set event one timer
-  uint32_t event2timer = millis();              //set event two timer
+  uint32_t TimeEvent2 = millis();              //set event one timer
+  uint32_t TimeEvent3 = millis();              //set event two timer
 
   //
   uint32_t TimeEvent1 = millis();               //set TimeEvent1 to effective 0
   uint32_t Sensor1Timer = millis();             //clear sensor1Timer to effective 0
-  uint32_t Sensor2Timer = millis();             //clear sensor1Timer to effective 0
   uint32_t Sensor2Deadmillis = millis();        //clear mills for difference
 
   //
@@ -177,11 +170,11 @@ void Flying() {
     }                                               //end of TimeEvent1_time
     //------------------------------------------------------------------
     //
-    //  This test if eventTime1 time has come
-    //  See above for eventTime1 settings between this event
+    //  This test if TimeEvent2_time time has come
+    //  See above for TimeEvent2_time settings between this event
     //
-    if ((millis() - event1timer) > eventTime1) { //antibiotic event 
-      event1timer = millis();                    //reset event1timer
+    if ((millis() - TimeEvent2) > TimeEvent2_time) { //antibiotic event 
+      TimeEvent2 = millis();                    //reset TimeEvent2
       Serial.println();
       Serial.println(millis());
       //
@@ -201,8 +194,8 @@ void Flying() {
     }
 
     //continue
-    //if ((millis() - event2timer) > eventTime2) { //color sensor event OLD
-    //  event2timer = millis();                    //reset event2timer
+    //if ((millis() - TimeEvent3) > TimeEvent2_time) { //color sensor event OLD
+    //  TimeEvent3 = millis();                    //reset TimeEvent3
     //Serial.println();
     //Serial.println(millis());
     //unsigned int red = RGB_sensor.readRed();
@@ -413,4 +406,3 @@ void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile)
   }  
   Logfile.close();    
 }
- 
