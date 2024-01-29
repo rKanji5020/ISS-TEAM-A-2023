@@ -105,7 +105,7 @@ const int ANA3 = A3;              //analog 3 input
 #define IO3 (9)               // Input/Output to payload plus
 #define IO2 (4)               // Input/Output to payload plus
 #define IO1 (3)               // Input/Output to payload plus
-#define IO0 (A6)              // Input/Output to payload plus 
+#define IO0 (A6)              // Input/Output to payload plus
 //
 //-------Host interface communication 9600 baud ----------
 
@@ -257,6 +257,10 @@ uint8_t xh = 0;
 uint8_t xm = 0;
 uint8_t xs = 0;
 
+//------------------------------
+//  my own variables
+int fileNum = 0;
+
 //-------------------------------
 String str;                             //universal string statement
 
@@ -269,6 +273,7 @@ void help_ana();
 void help_io();
 void help_upload();
 void help_takeSphoto();
+void help_writeTextFile();
 void help_stackandheap();
 void help_initQueue();
 void help_text();
@@ -406,7 +411,8 @@ int (*commands_func[])() {
   &SystemSetup,           //33
   &ReadSetup,             //34
   &cmd_listQue,           //35
-  &cmd_enterTeamID        //36
+  &cmd_enterTeamID,        //36
+  &cmd_writeTextFile      //37
 };
 
 //List of command names
@@ -447,7 +453,8 @@ const char *commands_str[] = {
   "SystemSetup",     //33
   "ReadSetup",       //34
   "listQue",         //35
-  "enterTeamID"      //36
+  "enterTeamID",      //36
+  "writeTextFile"   //37
 };
 
 //List of LED sub command names
@@ -790,6 +797,8 @@ void my_cli() {
     if (!error_flag) {
 
       parse_line();
+    } else {
+      Serial.println("parse line error flag");
     }
     if (!error_flag) {
       execute();
@@ -1008,6 +1017,9 @@ int cmd_help() {
   else if (strcmp(args[1], commands_str[36]) == 0) { //enterTeamID
     help_enterTeamID();
   }
+  else if (strcmp(args[1], commands_str[37]) == 0){ // write text file
+    help_writeTextFile();
+  }
   else {
     help_help();
   }
@@ -1182,6 +1194,9 @@ void help_listQue() {
 void help_enterTeamID() {
   Serial.println("Using the form 'enterTeamID D' with D being");
   Serial.println("your Teams Idenification Number A through O");
+}
+void help_writeTextFile() {
+  Serial.println("Writes user_text_buf0 to text file");
 }
 //
 //FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -1994,6 +2009,23 @@ int cmd_takeSphoto() {        //19 - take a serial photo get a file name then pl
   // Status = Status | Bank0status;            //data in bank 0
   // Serial.print("Setting Buffer 0 status to = ");
   //  Serial.println(Status, HEX);
+
+  return 1;
+}
+
+int cmd_writeTextFile() {
+  Serial.println("cmd_writeText");
+  fileNum++; //increments file num
+  for (int i =0; i < 10; i++) { // clears args[1]
+    args[1][i] = '\0';
+  }
+  Serial.println("works so far");
+  sprintf(args[1], "%07d", fileNum); //creates file name
+  Serial.println("still working");
+  strcat(args[1], ".txt"); //adds extension
+  strcat(user_text_buf0, ("hello world")); //writes hello world to file
+//add2text(1, 1, 1, 1);
+  WriteText();
 
   return 1;
 }

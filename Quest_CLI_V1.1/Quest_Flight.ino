@@ -52,7 +52,6 @@
 //
 
 
-int fileNum = 0;
 char txtBuffer[20] = "----------";
 
 // color sensor declaration
@@ -83,11 +82,13 @@ void Flying() {
   //******************************************************************
 
   //refer to component test
-  pinMode(3, OUTPUT);  //nutrient pump (DO1)
-  pinMode(2, OUTPUT);  //antibiotic pump (DO0)
-  pinMode(11, OUTPUT); // BLUE LED (DO5??)
-  pinMode(10, OUTPUT); // WHITE 1 LED (DO4) 
-  pinMode(9, OUTPUT); // WHITE 2 LED (DO4) 
+  pinMode(IO1, OUTPUT); // half of pump 1
+  pinMode(IO2, OUTPUT); // half of pump 1
+  pinMode(IO3, OUTPUT); // half of pump 2 low - on
+  pinMode(IO4, OUTPUT); // half of pump 2 low - on
+  pinMode(IO5, OUTPUT); // oscillater leds
+  pinMode(IO6, OUTPUT); // BLUE leds
+  pinMode(IO7, OUTPUT); // WHITE leds
   //
   //******************************************************************
   // all / most delays are subject to change
