@@ -2019,11 +2019,13 @@ int cmd_writeTextFile() {
   for (int i =0; i < 10; i++) { // clears args[1]
     args[1][i] = '\0';
   }
+
   Serial.println("works so far");
   sprintf(args[1], "%07d", fileNum); //creates file name
   Serial.println("still working");
   strcat(args[1], ".txt"); //adds extension
-  strcat(user_text_buf0, ("hello world")); //writes hello world to file
+  dataappend(1, 1, 1, 1);
+  dataappend(2, 2, 2, 2);
 //add2text(1, 1, 1, 1);
   WriteText();
 

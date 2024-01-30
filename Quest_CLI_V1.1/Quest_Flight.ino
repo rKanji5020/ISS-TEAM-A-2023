@@ -345,14 +345,14 @@ void add2text(int value1,unsigned int value2,unsigned int value3,unsigned int va
 //
 
 
-void dataappend(int counts,int ampli,int SiPM,int Deadtime) {          //entry, add line with values to databuffer
+void dataappend(int value1,unsigned int value2,unsigned int value3,unsigned int value4) {          //entry, add line with values to databuffer
   //----- get and set time to entry -----
   DateTime now = rtc.now();                                               //get time of entry
   String stringValue = String(now.unixtime());                            //convert unix time to string
   const char* charValue = stringValue.c_str();                            //convert to a C string value
-  appendToBuffer(charValue);                                              //Sent unix time to databuffer
+  //appendToBuffer(charValue);                                              //Sent unix time to databuffer
   //----- add formated string to buffer -----
-  String results = " - " + String(counts) + " " + String(ampli) + " " + String(SiPM) + " " + String (Deadtime) + "\r\n";  //format databuffer entry
+  String results = "Sensor num: " + String(value1) + "\n" + " Red " + String(value2) + " Blue: " + String(value3) + " Green: " + String (value4) + "\r\n";  //format databuffer entry
   const char* charValue1 = results.c_str();                               //convert to a C string value
   appendToBuffer(charValue1);                                             //Send formated string to databuff
   //
@@ -365,9 +365,9 @@ void dataappend(int counts,int ampli,int SiPM,int Deadtime) {          //entry, 
 void appendToBuffer(const char* data) {                                   //enter with charator string to append
   int dataLength = strlen(data);                                          //define the length of data to append
       // ----- Check if there is enough space in the buffer                           //enough space?
-  if (databufferLength + dataLength < sizeof(databuffer)) {               //enouth space left in buffer
+  if (databufferLength + dataLength < sizeof(user_text_buf0)) {               //enouth space left in buffer
       // ----- Append the data to the buffer
-    strcat(databuffer, data);                                             //yes enough space, add data to end of buffer
+    strcat(user_text_buf0, data);                                             //yes enough space, add data to end of buffer
     databufferLength += dataLength;                                       //change to length of the buffer
   } else {
     Serial.println("Buffer is full. Data not appended.");                 //Not enough space, say so on terminal
