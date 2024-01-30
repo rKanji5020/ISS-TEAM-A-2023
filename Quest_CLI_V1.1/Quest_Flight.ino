@@ -34,8 +34,9 @@
 #define one_day  24*one_hour                   // one hour of time
 //
 
-#define TimeEvent1_time     ((one_min * 60) / SpeedFactor)      //take a photo time and pump broth TBD
-#define TimeEvent2_time     ((one_day * 10) / SpeedFactor)       //this event every 10 days - pump antibiotic TBD 
+#define TimeEvent1_time     ((one_day * 4) / SpeedFactor)      //take a photo time and pump broth TBD
+#define TimeEvent2_time     ((one_day * 10) / SpeedFactor)       //this event on day 2, 4, 10, 12
+// aka one_day <-- wait time + ( 2 * one_day) || (4 * one_day) || (10 * one_day) || (12*one_day);
 #define Sensor1time         ((one_min * 2)/ SpeedFactor)      //Time to make Sensor1 readings -- both color sensor readings 
 
 //
@@ -52,20 +53,21 @@
 //
 
 
-char txtBuffer[20] = "----------";
+//char txtBuffer[20] = "----------";
 
 // color sensor declaration
-SFE_ISL29125 RGB_sensor;
+SFE_ISL29125 RGB_sensor0;
+SFE_ISL29125 RGB_sensor1;
 void Flying() {
 
   Serial.println("Here to Run flight program, not done yet 20230718");
   Serial.println(" 20230718 working on it");
 
-  uint32_t TimeEvent2 = millis();              //set event one timer
-  uint32_t TimeEvent3 = millis();              //set event two timer
-
+  uint32_t TimeEvent1 = millis();               //set event one timer --pump lb broth event 
+  uint32_t TimeEvent2 = millis();              //set event two timer -- pump antibiotic 
+  uint32_t TimeEvent3 = millis();              //set event three timer
   //
-  uint32_t TimeEvent1 = millis();               //set TimeEvent1 to effective 0
+
   uint32_t Sensor1Timer = millis();             //clear sensor1Timer to effective 0
   uint32_t Sensor2Deadmillis = millis();        //clear mills for difference
 
@@ -86,7 +88,7 @@ void Flying() {
   pinMode(IO2, OUTPUT); // half of pump 1
   pinMode(IO3, OUTPUT); // half of pump 2 low - on
   pinMode(IO4, OUTPUT); // half of pump 2 low - on
-  pinMode(IO5, OUTPUT); // oscillater leds
+  pinMode(IO5, OUTPUT); // oscillater 
   pinMode(IO6, OUTPUT); // BLUE leds
   pinMode(IO7, OUTPUT); // WHITE leds
   //
@@ -115,7 +117,7 @@ void Flying() {
   //***********************************************************************
   //
 
-  //delay(1000); 24 hr wait 
+  delay(one_day / SpeedFactor ); //24 hr wait 
 
   while (1) {
     //
@@ -137,45 +139,27 @@ void Flying() {
     //
     if ((millis() - TimeEvent1) > TimeEvent1_time) {
       TimeEvent1 = millis();                    //yes is time now reset TimeEvent1
-          //  Take a photo using the serial c329 camera and place file name in Queue
-      if (State == 0){      //which state ?             
-          ledCondition("on");
-          delay(100);
-          cmd_takeSphoto();            //Take serial photo and send it
-          delay(100);
-          ledCondition("off");          
+          //  Take a photo using the serial c329 camera and place file name in Queue     
+        ledCondition("on");
+        delay(100);
+        cmd_takeSphoto();            //Take serial photo and send it
+        delay(100);
+        ledCondition("off");          
       }
           //  Take a photo using the SPI c329 camera and place file name in Queue
           //  Hardware Note: to use the Spi camera - a jumper must be connected from IO0
           //  the the hold pin on J6.......
-      if (State == 1){
-          ledCondition("on");
-          delay(100);
-          cmd_takeSpiphoto();         //Take SPI photo and send it
-          delay(100);
-          ledCondition("off");
-
-      }
-          //  no camera - Send a 30k of buffer datta in place of a photo to the output Queue
-      if (State == 2){
-          nophoto30K();               //Use photo buffer for data
-      }
-          //  no camera - send just text appended with data to the output Queue
-      if (State == 3){
-          nophotophoto();               //photo event with no photo just to transfer data
-      }
-      State++;                          //go to the next state
-      if (State == 4){                  //reset the state back to 0
-        State = 0;                      //state to 0
-      }
-    }                                               //end of TimeEvent1_time
+  //end of TimeEvent1_time
     //------------------------------------------------------------------
     //
     //  This test if TimeEvent2_time time has come
     //  See above for TimeEvent2_time settings between this event
     //
-    if ((millis() - TimeEvent2) > TimeEvent2_time) { //antibiotic event 
-      TimeEvent2 = millis();                    //reset TimeEvent2
+    if (millis() = (one_day + (2 * one_day)) / SpeedFactor 
+     || millis() = (one_day + (4 * one_day)) / SpeedFactor
+     || millis() = (one_day + (10 * one_day)) / SpeedFactor
+     || millis() = (one_day + (12 * one_day)) / SpeedFactor) { //antibiotic event 
+      //TimeEvent2 = millis();                    //reset TimeEvent2
       Serial.println();
       Serial.println(millis());
       //
@@ -387,23 +371,23 @@ void ledCondition(String condition) {
   }
 }
 // old method to create text file from sensor data 
-void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
-  fileNum++; //adds num to end of file
-  itoa(fileNum, txtBuffer, 10);
-  Logfile = SD.open(strcat(strcat(myFile, txtBuffer) , (".txt")), FILE_WRITE);  //open new myFile;
-  txtBuffer[0] = '\0'; 
-  if (Logfile) {  
-  //with logfile is open
-    Logfile.write(xd); Logfile.write(" Days   ");
-    Logfile.write(xh); Logfile.write(" Hours  ");
-    Logfile.write(xm); Logfile.write(" Min  ");
-    Logfile.write(xs); Logfile.write(" Sec");
-    char red[] = "red";
-    Logfile.write(red + r);                         //write the string to file
-    Logfile.write("green: " + g); 
-    Logfile.write("blue: " + b); 
-  } else {                                        //if not open say error
-    Serial.println("\r\nlogit error");  
-  }  
-  Logfile.close();    
-}
+// void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
+//   fileNum++; //adds num to end of file
+//   itoa(fileNum, txtBuffer, 10);
+//   Logfile = SD.open(strcat(strcat(myFile, txtBuffer) , (".txt")), FILE_WRITE);  //open new myFile;
+//   txtBuffer[0] = '\0'; 
+//   if (Logfile) {  
+//   //with logfile is open
+//     Logfile.write(xd); Logfile.write(" Days   ");
+//     Logfile.write(xh); Logfile.write(" Hours  ");
+//     Logfile.write(xm); Logfile.write(" Min  ");
+//     Logfile.write(xs); Logfile.write(" Sec");
+//     char red[] = "red";
+//     Logfile.write(red + r);                         //write the string to file
+//     Logfile.write("green: " + g); 
+//     Logfile.write("blue: " + b); 
+//   } else {                                        //if not open say error
+//     Serial.println("\r\nlogit error");  
+//   }  
+//   Logfile.close();    
+// }
