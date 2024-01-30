@@ -69,6 +69,7 @@ const char source_file[] = __FILE__;
 #include "Quest_command.h"
 #include "Quest_CLI.h"
 #include "Quest_Flight.h"
+#include "SparkFunISL29125.h"
 //
 //-----------------------------------------------
 //
@@ -120,6 +121,10 @@ SdFat SD;
 File32 file;
 File32 root;
 File Logfile;
+
+//sensor declaration
+SFE_ISL29125 RGB_sensor0;
+SFE_ISL29125 RGB_sensor1;
 
 //--------- define values for BME680
 #define bme680address (0x76)            // BME680 address
@@ -654,7 +659,7 @@ void setup() {
   pinMode(IO6, OUTPUT);      //
   digitalWrite(IO6, HIGH);   //
   pinMode(IO5, OUTPUT);      //
-  digitalWrite(IO5, HIGH);   //
+  digitalWrite(IO5, LOW);   //
   pinMode(IO4, OUTPUT);      //
   digitalWrite(IO4, HIGH);   //
   pinMode(IO3, OUTPUT);      //
@@ -728,6 +733,24 @@ void setup() {
   IRQreference = millis();          //capture millis start of interrupt(millis not availiable in IRQ)
   attachInterrupt(digitalPinToInterrupt(SerialIRQin), Hostinterupt, FALLING);
   Serial.println("Interrupts enabled ");
+  
+  // multiplexer setup
+    tcaselect(2);
+    if (!RGB_sensor0.init())
+    {
+      Serial.println("Sensor 0 Initialization Failed\n\r");
+    } else{
+    Serial.println("Sensor 0 Initialization Successful\n\r");  
+    }    
+    
+    
+    tcaselect(3);
+    if (!RGB_sensor1.init())
+    {
+      Serial.println("Sensor 1 Initialization Failed\n\r");
+    } else{
+    Serial.println("Sensor 1 Initialization Successful\n\r");      
+    }  
 }
 //
 //-----------------------------------------------------------------------------------
@@ -2027,6 +2050,25 @@ int cmd_writeTextFile() {
   dataappend(1, 1, 1, 1);
   dataappend(2, 2, 2, 2);
 //add2text(1, 1, 1, 1);
+  WriteText();
+
+  return 1;
+}
+
+int cmd_writeTextFile(int s1 ,unsigned int r1 ,unsigned int g1 ,unsigned int b1,
+int s2 ,unsigned int r2 ,unsigned int g2 ,unsigned int b2) {
+  Serial.println("cmd_writeText");
+  fileNum++; //increments file num
+  for (int i =0; i < 10; i++) { // clears args[1]
+    args[1][i] = '\0';
+  }
+
+  Serial.println("works so far");
+  sprintf(args[1], "%07d", fileNum); //creates file name
+  Serial.println("still working");
+  strcat(args[1], ".txt"); //adds extension
+  dataappend(s1, r1, g1, b1);
+  dataappend(s2, r2, g2, b2);
   WriteText();
 
   return 1;

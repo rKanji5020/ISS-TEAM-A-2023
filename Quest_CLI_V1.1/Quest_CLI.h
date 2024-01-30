@@ -63,6 +63,7 @@ int cmd_trtc();
 int cmd_format();
 int cmd_free();
 int cmd_takeSpiphoto();
+int cmd_writeText();
 int framdump();
 int initfram();
 int framclear();

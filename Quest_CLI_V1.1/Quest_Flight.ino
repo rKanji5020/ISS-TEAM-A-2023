@@ -16,6 +16,10 @@
 #include "Quest_CLI.h"
 #include "SparkFunISL29125.h"
 
+#define TCAADDR 0x70 // I2C for multiplexer
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //    this defines the timers used to control flight operations
 //////////////////////////////////////////////////////////////////////////
@@ -56,16 +60,15 @@
 //char txtBuffer[20] = "----------";
 
 // color sensor declaration
-SFE_ISL29125 RGB_sensor0;
-SFE_ISL29125 RGB_sensor1;
+
 void Flying() {
 
   Serial.println("Here to Run flight program, not done yet 20230718");
   Serial.println(" 20230718 working on it");
 
-  uint32_t TimeEvent1 = millis();               //set event one timer --pump lb broth event 
+  uint32_t TimeEvent1 = millis();               //set event one timer -- pump lb broth event, camera 
   uint32_t TimeEvent2 = millis();              //set event two timer -- pump antibiotic 
-  uint32_t TimeEvent3 = millis();              //set event three timer
+  uint32_t TimeEvent3 = millis();              //set event three timer -- camera?
   //
 
   uint32_t Sensor1Timer = millis();             //clear sensor1Timer to effective 0
@@ -139,26 +142,38 @@ void Flying() {
     //
     if ((millis() - TimeEvent1) > TimeEvent1_time) {
       TimeEvent1 = millis();                    //yes is time now reset TimeEvent1
-          //  Take a photo using the serial c329 camera and place file name in Queue     
-        ledCondition("on");
-        delay(100);
-        cmd_takeSphoto();            //Take serial photo and send it
-        delay(100);
-        ledCondition("off");          
+  
+      //  Take a photo using the serial c329 camera and place file name in Queue       
+
+      digitalWrite(IO5, HIGH); //turns blue LEDS off
+      digitalWrite(IO7, LOW); // turns white LEDS on
+      delay(1000);   
+      cmd_takeSphoto();            //Take serial photo and send it
+      delay(one_min);             // more than enough time for camera to take pic
+      digitalWrite(IO7, HIGH); // turns white LEDS off    
+      digitalWrite(IO5, LOW); //turns blue LEDS on
+      delay(5000);
+
+      // Pump LB Broth
+
+      digitalWrite(IO1, LOW);
+      digitalWrite(IO2, LOW); // turns pump 1 on
+      delay(1000); // THIS IS HOW LONG IT TAKES FOR 2 ML OF LB BROTH TO PUMP, TBDDDDD 
+      digitalWrite(IO1, HIGH);
+      digitalWrite(IO2, HIGH); // turns pump 1 off
+
+      //end of TimeEvent1_time
       }
-          //  Take a photo using the SPI c329 camera and place file name in Queue
-          //  Hardware Note: to use the Spi camera - a jumper must be connected from IO0
-          //  the the hold pin on J6.......
-  //end of TimeEvent1_time
+
     //------------------------------------------------------------------
     //
     //  This test if TimeEvent2_time time has come
     //  See above for TimeEvent2_time settings between this event
     //
-    if (millis() = (one_day + (2 * one_day)) / SpeedFactor 
-     || millis() = (one_day + (4 * one_day)) / SpeedFactor
-     || millis() = (one_day + (10 * one_day)) / SpeedFactor
-     || millis() = (one_day + (12 * one_day)) / SpeedFactor) { //antibiotic event 
+    if (millis() == ((one_day + (2 * one_day)) / SpeedFactor) 
+      || millis() == ((one_day + (4 * one_day)) / SpeedFactor)
+      || millis() == ((one_day + (10 * one_day)) / SpeedFactor)
+      || millis() == (one_day + (12 * one_day)) / SpeedFactor) {  //antibiotic event 
       //TimeEvent2 = millis();                    //reset TimeEvent2
       Serial.println();
       Serial.println(millis());
@@ -171,10 +186,11 @@ void Flying() {
       //
       //  Take a photo using the SPI c329 camera
       //
-      digitalWrite(2, LOW); //pumps antibiotic
-      delay(1000);
-      digitalWrite(2, HIGH); //turns pump off
-      delay(5000);      
+      digitalWrite(IO3, LOW);
+      digitalWrite(IO4, LOW); // turns pump 2 on
+      delay(1000); // THIS IS HOW LONG IT TAKES FOR 1 ML OF ANTIBOITIC TO PUMP, TBDDDDD 
+      digitalWrite(IO3, HIGH);
+      digitalWrite(IO4, HIGH); // turns pump 2 off
 
     }
 
@@ -252,14 +268,21 @@ void Flying() {
     //
     if ((millis() - Sensor1Timer) > Sensor1time) {    //Is it time to read?
       Sensor1Timer = millis();                        //Yes, lets read the sensor1
-      sensor1count++;
-      unsigned int red = RGB_sensor.readRed();
-      unsigned int green = RGB_sensor.readGreen();
-      unsigned int blue = RGB_sensor.readBlue();      
-      int value1 = sensor1count;              //sensor count number up from zero
 
-      //
-      add2text(value1, red, green, blue);       //add the values to the text buffer
+      tcaselect(2);
+      
+      unsigned int red0 = RGB_sensor0.readRed();
+      unsigned int green0 = RGB_sensor0.readGreen();
+      unsigned int blue0 = RGB_sensor0.readBlue();
+
+      delay(2000);    
+      tcaselect(3);
+
+      unsigned int red1 = RGB_sensor1.readRed();
+      unsigned int green1 = RGB_sensor1.readGreen();
+      unsigned int blue1 = RGB_sensor1.readBlue();
+
+      cmd_writeTextFile(1, red0, green0, blue0, 2, red1, green1, blue1);
       //    
     }     // End of Sensor1 time event
     //
@@ -358,17 +381,13 @@ void appendToBuffer(const char* data) {                                   //ente
   }       //end not enough space
 }         //end appendToBuffer
 
-//sets main leds to on or off
-void ledCondition(String condition) {
-  if (condition == "on") {
-    digitalWrite(11, LOW); // Blue LED on
-    digitalWrite(10, LOW); // WHITE 1 on
-    digitalWrite(9, LOW); // WHITE 2 on   
-  } else if (condition == "off") {
-    digitalWrite(11, HIGH); // Blue LED on
-    digitalWrite(10, HIGH); // WHITE 1 on
-    digitalWrite(9, HIGH); // WHITE 2 on       
-  }
+
+void tcaselect(uint8_t i) {
+  if (i > 7) return;
+ 
+  Wire.beginTransmission(TCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();  
 }
 // old method to create text file from sensor data 
 // void logit_myFile(unsigned int r, unsigned int  g, unsigned int b, char* myFile) {
