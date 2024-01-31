@@ -45,8 +45,8 @@
 #define Sensor1time         ((one_min * 2)/ SpeedFactor)      //Time to make Sensor1 readings -- both color sensor readings 
 
 //
-  int pumpState1 = 0;     //used to differentiate first pump vs second pump
-  int pumpState2 = 0;     //used to differentiate first pump vs second pump
+  int pumpState1 = 0;     //used to differentiate first time pumping vs the rest 
+  int pumpState2 = 0;     //used to differentiate first time pumping vs the rest 
   int State =   0;          //FOR TESTING ONLY WILL SWITCH FROM SPI CAMERA TO SERIAL CAMERA EVERY TimeEvent1_time!!!!!
 //
 
@@ -68,9 +68,9 @@ void Flying() {
   Serial.println("Here to Run flight program, not done yet 20230718");
   Serial.println(" 20230718 working on it");
 
-  uint32_t TimeEvent1 = millis();               //set event one timer -- pump lb broth event, camera 
+  uint32_t TimeEvent1 = millis();               //set event one timer -- pump lb broth event 
   uint32_t TimeEvent2 = millis();              //set event two timer -- pump antibiotic 
-  uint32_t TimeEvent3 = millis();              //set event three timer -- camera?
+  uint32_t TimeEvent3 = millis();              //set event three timer -- camera
   //
 
   uint32_t Sensor1Timer = millis();             //clear sensor1Timer to effective 0
@@ -147,17 +147,19 @@ void Flying() {
 
       // Pump LB Broth
 
-      digitalWrite(IO5, HIGH); //turns oscillator on
-      digitalWrite(IO5, HIGH);      
+      //digitalWrite(IO5, HIGH); //turns oscillator on
+      //digitalWrite(IO5, HIGH);      
+      Serial.println("oscillator turned on");
 
       delay(30 * one_sec); //leaves on for 30 seconds
 
       digitalWrite(IO5, LOW); //turns oscillator off
       digitalWrite(IO5, LOW);  
+      Serial.println("oscillator turned off");
 
-      digitalWrite(IO3, LOW);
-      digitalWrite(IO4, LOW); // turns broth pump on      
-
+      //digitalWrite(IO3, LOW);
+      //digitalWrite(IO4, LOW); // turns broth pump on      
+      Serial.println("broth pumped turned on");
       if (pumpState1 == 0) {
         delay(23480); //delay first pump by 22 seconds
         pumpState1++;
@@ -167,7 +169,7 @@ void Flying() {
       
       digitalWrite(IO3, HIGH);
       digitalWrite(IO4, HIGH); // turns pump 2 off
-
+      Serial.println("broth pumped turned off");
       //end of TimeEvent1_time
       }
 
@@ -192,17 +194,19 @@ void Flying() {
       //
 
 
-      digitalWrite(IO5, HIGH); //turns oscillator on
-      digitalWrite(IO5, HIGH);      
+      //digitalWrite(IO5, HIGH); //turns oscillator on
+      //digitalWrite(IO5, HIGH);      
+      Serial.println("oscillator turned on");
 
       delay(30 * one_sec); //leaves on for 30 seconds
 
       digitalWrite(IO5, LOW); //turns oscillator off
       digitalWrite(IO5, LOW);      
+      Serial.println("oscillator turned off");
 
-
-      digitalWrite(IO3, LOW);
-      digitalWrite(IO4, LOW); // turns pump 2 on
+      //digitalWrite(IO1, LOW);
+      //digitalWrite(IO2, LOW); // turns pump 2 on
+      Serial.println("antibiotic pump turned on");
 
       if (pumpState2 == 0) {
         delay(22 * one_sec); //delay first pump by 22 seconds
@@ -211,8 +215,9 @@ void Flying() {
         delay(17800); //time it takes for pump to run
       }
 
-      digitalWrite(IO3, HIGH);
-      digitalWrite(IO4, HIGH); // turns pump 2 off
+      digitalWrite(IO1, HIGH);
+      digitalWrite(IO2, HIGH); // turns pump 2 off
+      Serial.println("antibiotic pump turned off");
 
     }
 
