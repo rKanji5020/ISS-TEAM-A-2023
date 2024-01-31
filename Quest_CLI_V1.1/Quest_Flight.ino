@@ -38,13 +38,15 @@
 #define one_day  24*one_hour                   // one hour of time
 //
 
-#define TimeEvent1_time     ((one_day * 4) / SpeedFactor)      //take a photo time and pump broth TBD
-#define TimeEvent2_time     ((one_day * 10) / SpeedFactor)       //this event on day 2, 4, 10, 12
+#define TimeEvent1_time     ((one_day * 4) / SpeedFactor)      //pump broth TBD
+#define TimeEvent2_time     ((one_day * 10) / SpeedFactor)       //antibioti: this event on day 2, 4, 10, 12
+#define TimeEvent3_time     ((one_hour * 12) / SpeedFactor)      //take a photo 
 // aka one_day <-- wait time + ( 2 * one_day) || (4 * one_day) || (10 * one_day) || (12*one_day);
 #define Sensor1time         ((one_min * 2)/ SpeedFactor)      //Time to make Sensor1 readings -- both color sensor readings 
 
 //
-  int sensor1count = 0;     //counter of times the sensor has been accessed
+  int pumpState1 = 0;     //used to differentiate first pump vs second pump
+  int pumpState2 = 0;     //used to differentiate first pump vs second pump
   int State =   0;          //FOR TESTING ONLY WILL SWITCH FROM SPI CAMERA TO SERIAL CAMERA EVERY TimeEvent1_time!!!!!
 //
 
@@ -87,10 +89,10 @@ void Flying() {
   //******************************************************************
 
   //refer to component test
-  pinMode(IO1, OUTPUT); // half of pump 1
-  pinMode(IO2, OUTPUT); // half of pump 1
-  pinMode(IO3, OUTPUT); // half of pump 2 low - on
-  pinMode(IO4, OUTPUT); // half of pump 2 low - on
+  pinMode(IO1, OUTPUT); // half of right pump (antibiotic) - first time pumping: 23.49 rest: 14.59
+  pinMode(IO2, OUTPUT); // half of right pump
+  pinMode(IO3, OUTPUT); // half of left pump (broth) low - on
+  pinMode(IO4, OUTPUT); // half of left pump low - on first time pumping: 22 seconds rest: 17.18
   pinMode(IO5, OUTPUT); // oscillater 
   pinMode(IO6, OUTPUT); // BLUE leds
   pinMode(IO7, OUTPUT); // WHITE leds
@@ -140,27 +142,31 @@ void Flying() {
     //  this test if TimeEvent1 time has come
     //  See above for TimeEvent1_time settings between this event
     //
-    if ((millis() - TimeEvent1) > TimeEvent1_time) {
-      TimeEvent1 = millis();                    //yes is time now reset TimeEvent1
-  
-      //  Take a photo using the serial c329 camera and place file name in Queue       
-
-      digitalWrite(IO5, HIGH); //turns blue LEDS off
-      digitalWrite(IO7, LOW); // turns white LEDS on
-      delay(1000);   
-      cmd_takeSphoto();            //Take serial photo and send it
-      delay(one_min);             // more than enough time for camera to take pic
-      digitalWrite(IO7, HIGH); // turns white LEDS off    
-      digitalWrite(IO5, LOW); //turns blue LEDS on
-      delay(5000);
+    if ((millis() - TimeEvent1) > TimeEvent1_time) { // broth pump event 
+      TimeEvent1 = millis();                    //yes is time now reset TimeEvent1 
 
       // Pump LB Broth
 
-      digitalWrite(IO1, LOW);
-      digitalWrite(IO2, LOW); // turns pump 1 on
-      delay(1000); // THIS IS HOW LONG IT TAKES FOR 2 ML OF LB BROTH TO PUMP, TBDDDDD 
-      digitalWrite(IO1, HIGH);
-      digitalWrite(IO2, HIGH); // turns pump 1 off
+      digitalWrite(IO5, HIGH); //turns oscillator on
+      digitalWrite(IO5, HIGH);      
+
+      delay(30 * one_sec); //leaves on for 30 seconds
+
+      digitalWrite(IO5, LOW); //turns oscillator off
+      digitalWrite(IO5, LOW);  
+
+      digitalWrite(IO3, LOW);
+      digitalWrite(IO4, LOW); // turns broth pump on      
+
+      if (pumpState1 == 0) {
+        delay(23480); //delay first pump by 22 seconds
+        pumpState1++;
+      } else {
+        delay(14590); //time it takes for pump to run
+      }
+      
+      digitalWrite(IO3, HIGH);
+      digitalWrite(IO4, HIGH); // turns pump 2 off
 
       //end of TimeEvent1_time
       }
@@ -184,41 +190,46 @@ void Flying() {
       //         itoa(millis(),text_buf,10);
       //         strcat(user_text_buf0,(text_buf));
       //
-      //  Take a photo using the SPI c329 camera
-      //
+
+
+      digitalWrite(IO5, HIGH); //turns oscillator on
+      digitalWrite(IO5, HIGH);      
+
+      delay(30 * one_sec); //leaves on for 30 seconds
+
+      digitalWrite(IO5, LOW); //turns oscillator off
+      digitalWrite(IO5, LOW);      
+
+
       digitalWrite(IO3, LOW);
       digitalWrite(IO4, LOW); // turns pump 2 on
-      delay(1000); // THIS IS HOW LONG IT TAKES FOR 1 ML OF ANTIBOITIC TO PUMP, TBDDDDD 
+
+      if (pumpState2 == 0) {
+        delay(22 * one_sec); //delay first pump by 22 seconds
+        pumpState2++;
+      } else {
+        delay(17800); //time it takes for pump to run
+      }
+
       digitalWrite(IO3, HIGH);
       digitalWrite(IO4, HIGH); // turns pump 2 off
 
     }
 
     //continue
-    //if ((millis() - TimeEvent3) > TimeEvent2_time) { //color sensor event OLD
-    //  TimeEvent3 = millis();                    //reset TimeEvent3
-    //Serial.println();
-    //Serial.println(millis());
-    //unsigned int red = RGB_sensor.readRed();
-    //unsigned int green = RGB_sensor.readGreen();
-    //unsigned int blue = RGB_sensor.readBlue();      
-
-//      char redS[64] = String(red, DEC);
-//      String(green, DEC);
-//      String(blue, DEC);
-
-     // logit_myFile(red, green, blue, ("sensorReadings"));
-      
-      
-      //
-      //  Build the User Text buffer here
-      //
-      //         strcat(user_text_buf0,("User Buffer space here, millis = "));
-      //         itoa(millis(),text_buf,10);
-      //         strcat(user_text_buf0,(text_buf));
-      //
-      //  Take a photo using the SPI c329 camera
-      //
+    if ((millis() - TimeEvent3) > TimeEvent3_time) { //ccamera event
+      TimeEvent3 = millis();                    //reset TimeEvent3
+      Serial.println();
+      Serial.println(millis());
+      digitalWrite(IO5, HIGH); //turns blue LEDS off
+      digitalWrite(IO7, LOW); // turns white LEDS on
+      delay(1000);   
+      cmd_takeSphoto();            //Take serial photo and send it
+      delay(one_min);             // more than enough time for camera to take pic
+      digitalWrite(IO7, HIGH); // turns white LEDS off    
+      digitalWrite(IO5, LOW); //turns blue LEDS on
+      delay(5000);
+    }
 //*******************************************************************************
 //*********** One second counter timer will trigger every second ****************
 //*******************************************************************************
