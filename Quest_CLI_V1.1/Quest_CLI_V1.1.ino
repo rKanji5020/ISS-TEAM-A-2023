@@ -657,7 +657,7 @@ void setup() {
   pinMode(IO7, OUTPUT);      //
   digitalWrite(IO7, HIGH);   //
   pinMode(IO6, OUTPUT);      //
-  digitalWrite(IO6, HIGH);   //
+  digitalWrite(IO6, LOW);   //
   pinMode(IO5, OUTPUT);      //
   digitalWrite(IO5, LOW);   //
   pinMode(IO4, OUTPUT);      //
