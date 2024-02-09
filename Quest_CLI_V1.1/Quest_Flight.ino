@@ -147,8 +147,8 @@ void Flying() {
 
       // Pump LB Broth
 
-      //digitalWrite(IO5, HIGH); //turns oscillator on
-      //digitalWrite(IO5, HIGH);      
+      digitalWrite(IO5, HIGH); //turns oscillator on
+      digitalWrite(IO5, HIGH);      
       Serial.println("oscillator turned on");
 
       delay(30 * one_sec); //leaves on for 30 seconds
@@ -157,8 +157,8 @@ void Flying() {
       digitalWrite(IO5, LOW);  
       Serial.println("oscillator turned off");
 
-      //digitalWrite(IO3, LOW);
-      //digitalWrite(IO4, LOW); // turns broth pump on      
+      digitalWrite(IO3, LOW);
+      digitalWrite(IO4, LOW); // turns broth pump on      
       Serial.println("broth pumped turned on");
       if (pumpState1 == 0) {
         delay(23480); //delay first pump by 22 seconds
@@ -194,8 +194,8 @@ void Flying() {
       //
 
 
-      //digitalWrite(IO5, HIGH); //turns oscillator on
-      //digitalWrite(IO5, HIGH);      
+      digitalWrite(IO5, HIGH); //turns oscillator on
+      digitalWrite(IO5, HIGH);      
       Serial.println("oscillator turned on");
 
       delay(30 * one_sec); //leaves on for 30 seconds
@@ -204,8 +204,8 @@ void Flying() {
       digitalWrite(IO5, LOW);      
       Serial.println("oscillator turned off");
 
-      //digitalWrite(IO1, LOW);
-      //digitalWrite(IO2, LOW); // turns pump 2 on
+      digitalWrite(IO1, LOW);
+      digitalWrite(IO2, LOW); // turns pump 2 on
       Serial.println("antibiotic pump turned on");
 
       if (pumpState2 == 0) {
